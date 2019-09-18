@@ -95,7 +95,7 @@ bot.on("message", message => {
         console.log("Timenow: "+(new Date()));
         console.log('-----------------');
     }
-    const helpString = '*Paste a doc URL* to let me help you keep on track';
+    const helpString = 'Tell me *I want to write more* to let me help you keep on track\nI will send daily report on the progress you made on those docs on 7:15 am.';
     switch (message.type) {
     case "message":
         if (message.channel[0] === "D" && message.bot_id === undefined) {
@@ -111,6 +111,7 @@ bot.on("message", message => {
                 shareLinksDaily(slackID);
             }else{
                 bot.postMessage(message.user, helpString, {as_user:true});
+                //displayShareLink(slackID);
             }
         }
         break;
@@ -197,17 +198,6 @@ function shareLinksDailyReport_users(users){
         return user.original_link+" "+user.progress;
     });
     bot.postMessage(users[0].slackID, "Your progress on your writing yesterday:\n"+message.join("\n"), {as_user: true});
-}
-
-function promisify(api) {
-  return function(...args) {
-    return new Promise(function(resolve, reject) {
-      api(...args, function(err, response) {
-        if (err) return reject(err);
-        resolve(response);
-      });
-    });
-  };
 }
 
 async function countWord(params, callback){
