@@ -109,7 +109,12 @@ bot.on("message", message => {
                 shareLinksDailyReport(slackID);
             }else if(message.text.includes("shareLinksDaily")){
                 shareLinksDaily(slackID);
-            }else{
+            }else if(message.text.includes("report")){
+                console.log("READY to get report");
+                getReport4Research(message.user);
+                //bot.postMessage(message.user, "reportttttt", {as_user:true});
+            }
+            else{
                 bot.postMessage(message.user, helpString, {as_user:true});
                 //displayShareLink(slackID);
             }
@@ -118,6 +123,110 @@ bot.on("message", message => {
     }
     
 });
+
+function getReport4Research(slackID) {
+    ShareLink.find({}, function (err, users) {
+        if(err) {
+            console.log("Error occurs when getting all the data from db");
+        } else {
+            var report = [];
+            report.push({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "_*Research Report*_"
+                }
+            });
+            var users_map = {};
+            for(var i=0;i<users.length;i++){
+                users_map[users[i].slackID] = users_map[users[i].slackID]||[];
+                users_map[users[i].slackID].push(users[i]);
+            }
+            report.push({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "Total number of users: "+Object.keys(users_map).length
+                }
+            });
+            report.push({
+                "type": "divider"
+            });
+            report.push({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*User Activity*"
+                }
+            });
+            console.log("in get report 4 reserch function!!");
+            console.log(users_map);
+            var idx = 1;
+            for(var user in users_map) {
+                report.push({
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": idx+". User: "+user
+                    }
+                });
+                user_field = [];
+                user_field.push({
+					"type": "plain_text",
+					"text": "Number of documents: "+users_map[user].length,
+					"emoji": true
+                });
+                var docs = {'google':[], 'overleaf':[], 'dropbox':[]};
+                for(var i=0; i<users_map[user].length; i++) {
+                    var link = users_map[user][i].original_link;
+                    var number = users_map[user][i].number;
+                    if(link.includes("docs.google.com")) {
+                        docs['google'].push(number);
+                    } else if(link.includes("www.dropbox.com")) {
+                        docs['dropbox'].push(number);
+                    } else if(link.includes("www.overleaf.com")) {
+                        docs['overleaf'].push(number);
+                    }
+                }
+                var doc_msgs = ["#Google Docs: "+docs['google'].length, "#Dropbox Docs: "+docs['dropbox'].length, "#Overleaf Docs: "+docs['overleaf'].length];
+                for(var i=0; i<doc_msgs.length; i++) {
+                    var key = '';
+                    if(i==0) {
+                        key = 'google';
+                    } else if(i==1) {
+                        key = 'dropbox';
+                    } else if(i==2) {
+                        key= 'overleaf';
+                    }
+                    if(docs[key].length != 0) {
+                        var tmp_msg = "("+docs[key][0];
+                        for(var j=1; j<docs[key].length; j++) {
+                            tmp_msg = tmp_msg+"/"+docs[key][j];
+                        }
+                        tmp_msg = tmp_msg+")";
+                        doc_msgs[i] = doc_msgs[i]+" "+tmp_msg;
+                    }
+                    user_field.push({
+                        "type": "plain_text",
+                        "text": doc_msgs[i],
+                        "emoji": true
+                    });
+                }
+                
+                report.push({
+                    "type": "section",
+                    "fields": user_field
+                })
+                
+                idx++;
+                report.push({
+                    "type": "divider"
+                });
+            }
+            bot.postMessage(slackID, "", {as_user:true, blocks:report});
+        }
+    });
+}
 
 function removeShareLink(slackID, msg){
     console.log(msg.split(" "));
