@@ -10,6 +10,7 @@ var superagent = require('superagent');
 var mammoth = require('mammoth');
 var word_count = require('word-count');
 const pdf_parse = require('pdf-parse');
+const {configfile} = require('./config');
 mongoose.Promise = global.Promise;
 
 // create a bot
@@ -30,8 +31,9 @@ const startShareLinksDaily = function(){
 }
 
 const startShareLinksDailyReport = function(){
+    var time = configfile.daily_reminder_time.split(":");
     var job = new CronJob({
-        cronTime: '00 15 07 * * *',
+        cronTime: '00 '+time[1]+' '+time[0]+' * * *',
         onTick: function() {
             console.log('startShareLinksDailyReport tick!');
             shareLinksDailyReport();
@@ -79,7 +81,7 @@ function shareLinksDaily(trigger=null){
     });
 }
 
-bot.on('start', function() {
+bot.on('start', async function() {
     console.log('bot start!');
     startShareLinksDailyReport();
     startShareLinksDaily();
@@ -109,7 +111,7 @@ bot.on("message", message => {
                 shareLinksDailyReport(slackID);
             }else if(message.text.includes("shareLinksDaily")){
                 shareLinksDaily(slackID);
-            }else if(message.text.includes("report")){
+            }else if(message.text == configfile.report_message){
                 console.log("READY to get report");
                 getReport4Research(message.user);
                 //bot.postMessage(message.user, "reportttttt", {as_user:true});

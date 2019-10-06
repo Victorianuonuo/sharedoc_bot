@@ -2,6 +2,8 @@ var logger = require('morgan');
 var mongoose = require('mongoose');
 var _ = require('underscore');
 var {bot} = require('./bot');
+var command = require('./routes/command');
+var apikey = require('./routes/apikey');
 
 var https = require("https");
 setInterval(function() {
@@ -22,6 +24,8 @@ app.use(bodyParser.json());
 app.get('/', function(req, res) {
     res.send('Nudgebot is working! Path Hit: ' + req.url);
 });
+app.use('/command', command);
+app.use('/apikey', apikey);
 
 app.listen(process.env.PORT || 3000);
 

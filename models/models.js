@@ -20,6 +20,7 @@ var shareLinkSchema = new Schema({
 shareLinkSchema.index({ slackID: 1, original_link: 1 }, { unique: true });
 
 var ShareLink = mongoose.model('ShareLink', shareLinkSchema);
+
 module.exports = {
     ShareLink: ShareLink,
 };
