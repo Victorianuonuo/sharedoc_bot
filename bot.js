@@ -97,7 +97,7 @@ bot.on("message", message => {
         console.log("Timenow: "+(new Date()));
         console.log('-----------------');
     }
-    const helpString = 'Tell me *I want to write more* to let me help you keep on track\nI will send daily report on the progress you made on those docs on 7:15 am.';
+    const helpString = 'Tell me *I want to write more* to let me help you keep on track\nI will send daily report on the progress you made on those docs on '+configfile.daily_reminder_time+' am.';
     switch (message.type) {
     case "message":
         if (message.channel[0] === "D" && message.bot_id === undefined) {
