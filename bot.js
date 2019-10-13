@@ -2,6 +2,7 @@ var SlackBot = require('slackbots');
 var mongoose = require('mongoose');
 //mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true }); // only when test bot.js
 var { ShareLink, ConfigUser } = require('./models/models');
+var {generateProgressReportCSV} = require('./csv');
 var _ = require('underscore')
 var CronJob = require('cron').CronJob;
 var request = require('request');
@@ -162,8 +163,10 @@ const bot_function = function () {
                         //bot.postMessage(message.user, "reportttttt", {as_user:true});
                     } else if (message.text == 'refreshConfigs') {
                         loadConfigs();
-                    }else if(message.text.includes("progressReport")){
+                    } else if(message.text.includes("progressReport")){
                         getProgressReport4Research(slackID);
+                    } else if(message.text.includes("progresscsv")) {
+                        generateProgressReportCSV();
                     }
                     else {
                         bot.postMessage(message.user, helpString, { as_user: true });
