@@ -16,6 +16,8 @@ var shareLinkSchema = new Schema({
     number: String,
     isDocx: Number,
     progress: Number,
+    progress_list: [Number],
+    updated_times: [Date]
 });
 shareLinkSchema.index({ slackID: 1, original_link: 1 }, { unique: true });
 
