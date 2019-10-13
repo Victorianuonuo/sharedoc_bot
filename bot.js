@@ -162,6 +162,8 @@ const bot_function = function () {
                         //bot.postMessage(message.user, "reportttttt", {as_user:true});
                     } else if (message.text == 'refreshConfigs') {
                         loadConfigs();
+                    }else if(message.text.includes("progressReport")){
+                        getProgressReport4Research(slackID);
                     }
                     else {
                         bot.postMessage(message.user, helpString, { as_user: true });
@@ -176,6 +178,70 @@ const bot_function = function () {
 loadConfigs();
 startLoadConfigs();
 setTimeout(bot_function, 5000);
+
+function getProgressReport4Research(slackID) {
+    ShareLink.find({}, function (err, users){
+        if(err) {
+            console.log("Error occurs when getting all the data from db");
+        } else {
+            var report = [];
+            report.push({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "_*Research Report*_"
+                }
+            });
+            var report = [];
+            report.push({
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "_*Document Progress Report*_"
+                }
+            });
+            report.push({
+                "type": "divider"
+            });
+            var users_map = {};
+            for(var i=0;i<users.length;i++){
+                users_map[users[i].slackID] = users_map[users[i].slackID]||[];
+                users_map[users[i].slackID].push(users[i]);
+            }
+            for(var user in users_map) {
+                for(var i=0; i<users_map[user].length; i++) {
+                    // document i
+                    var msg = "";
+                    if(users_map[user][i].updated_times.length>0 && users_map[user][i].progress_list.length>0) {
+                        msg = msg + "*Document "+i+" for "+user+":* \n";
+                        time_list = users_map[user][i].updated_times;
+                        progress_list = users_map[user][i].progress_list
+                        for(var j=0; j<time_list.length; j++) {
+                            var date = time_list[j].toDateString();
+                            var time = time_list[j].toLocaleTimeString('en-US');
+                            var msg_tmp = date+" "+time+": "+progress_list[j]+" words.\n";
+                            msg = msg+msg_tmp;
+                        }
+                        //bot.postMessage(slackID, msg, {as_user:true});
+                        report.push({
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": msg
+                            }
+                        });
+                        report.push({
+                            "type": "divider"
+                        });
+                    } else {
+                        console.log("progress list not exist!!!");
+                    }
+                }
+            }
+            bot.postMessage(slackID, "", { as_user: true, blocks: report });
+        }
+    });
+}
 
 function getReport4Research(slackID) {
     ShareLink.find({}, function (err, users) {
@@ -315,6 +381,12 @@ function updateProgress(number, params) {
     console.log("updateProgress", user.link + " ", user.isDocx + " ", user.number + " ", number + " ");
     user.progress = parseInt(number, 10) - parseInt(user.number, 10);
     user.number = number;
+    progress_list_tmp = user.progress_list;
+    progress_list_tmp.push(user.progress);
+    user.progress_list = progress_list_tmp; 
+    time_list_tmp = user.updated_times;
+    time_list_tmp.push(params.time);
+    user.updated_times = time_list_tmp;
     user.save()
         .then(() => {
             console.log(number + " words now", user.original_link);
@@ -324,10 +396,10 @@ function updateProgress(number, params) {
         })
 }
 
-function shareLinksDaily_users(users) {
-
-    users.forEach(function (user) {
-        countWord({ user: user, link: user.link, isDocx: user.isDocx }, updateProgress);
+function shareLinksDaily_users(users){
+    var time = Date.now();
+    users.forEach(function(user){
+        countWord({user:user, link:user.link, isDocx:user.isDocx, time:time}, updateProgress);
     });
 
     // var all_count_words = users.map(function(link, i){
