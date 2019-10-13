@@ -1,5 +1,7 @@
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 var { ShareLink} = require('./models/models');
+var request = require('request');
+var fs = require('fs');
 
 const progressCSVWriter = createCsvWriter({
     path: process.env.PROGRESS_REPORT_LOCATION, // example: '../progressReport2.csv'
@@ -11,7 +13,25 @@ const progressCSVWriter = createCsvWriter({
     ]
 });
 
-function generateProgressReportCSV() {
+function sendFile(channel, file_title, file_name, file_location) {
+    request.post({
+        url: 'https://slack.com/api/files.upload',
+        formData: {
+            token: process.env.NUDGE_BOT_TOKEN,
+            title: file_title,
+            filename: file_name,
+            filetype: "auto",
+            channels: channel,
+            file: fs.createReadStream(file_location),
+        }
+    }, function(err, response) {
+        console.log("----- sending file to slack");
+        console.log(err);
+        console.log(JSON.parse(response.body));
+    });
+}
+
+function generateProgressReportCSV(channel) {
     ShareLink.find({}, function (err, users) {
         if(err) {
             console.log("Error occurs when getting all the data from db");
@@ -49,6 +69,7 @@ function generateProgressReportCSV() {
             progressCSVWriter.writeRecords(progress_records)       // returns a promise
             .then(() => {
                 console.log('store progress csv file Done');
+                sendFile(channel, "Document Progress Report", process.env.PROGRESS_REPORT_NAME, process.env.PROGRESS_REPORT_LOCATION);
             })
             .catch(err => {
                 console.log("store csv file error");
@@ -59,5 +80,6 @@ function generateProgressReportCSV() {
 }
 
 module.exports = {
-    generateProgressReportCSV: generateProgressReportCSV
+    generateProgressReportCSV: generateProgressReportCSV,
+    sendFile: sendFile
 }
