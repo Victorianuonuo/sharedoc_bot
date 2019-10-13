@@ -162,7 +162,7 @@ const bot_function = function () {
                         //bot.postMessage(message.user, "reportttttt", {as_user:true});
                     } else if (message.text == 'refreshConfigs') {
                         loadConfigs();
-                    }else if(message.text.includes("test")){
+                    }else if(message.text.includes("progressReport")){
                         getProgressReport4Research(slackID);
                     }
                     else {
@@ -238,8 +238,6 @@ function getProgressReport4Research(slackID) {
                     }
                 }
             }
-            console.log("!!!!!!!");
-            console.log(report)
             bot.postMessage(slackID, "", { as_user: true, blocks: report });
         }
     });
