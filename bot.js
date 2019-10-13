@@ -200,6 +200,9 @@ function getProgressReport4Research(slackID) {
                     "text": "_*Document Progress Report*_"
                 }
             });
+            report.push({
+                "type": "divider"
+            });
             var users_map = {};
             for(var i=0;i<users.length;i++){
                 users_map[users[i].slackID] = users_map[users[i].slackID]||[];
@@ -209,8 +212,8 @@ function getProgressReport4Research(slackID) {
                 for(var i=0; i<users_map[user].length; i++) {
                     // document i
                     var msg = "";
-                    if(users_map[user][i].updated_times && users_map[user][i].progress_list) {
-                        msg = msg + "!!! Document "+i+" for "+user+": \n";
+                    if(users_map[user][i].updated_times.length>0 && users_map[user][i].progress_list.length>0) {
+                        msg = msg + "*Document "+i+" for "+user+":* \n";
                         time_list = users_map[user][i].updated_times;
                         progress_list = users_map[user][i].progress_list
                         for(var j=0; j<time_list.length; j++) {
@@ -219,12 +222,25 @@ function getProgressReport4Research(slackID) {
                             var msg_tmp = date+" "+time+": "+progress_list[j]+" words.\n";
                             msg = msg+msg_tmp;
                         }
-                        bot.postMessage(slackID, msg, {as_user:true});
+                        //bot.postMessage(slackID, msg, {as_user:true});
+                        report.push({
+                            "type": "section",
+                            "text": {
+                                "type": "mrkdwn",
+                                "text": msg
+                            }
+                        });
+                        report.push({
+                            "type": "divider"
+                        });
                     } else {
                         console.log("progress list not exist!!!");
                     }
                 }
             }
+            console.log("!!!!!!!");
+            console.log(report)
+            bot.postMessage(slackID, "", { as_user: true, blocks: report });
         }
     });
 }
